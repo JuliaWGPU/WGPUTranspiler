@@ -56,6 +56,8 @@ function computeBlock(scope, islaunch, wgSize, wgCount, shmem, funcName, funcArg
 	for wgslf in wgslfunctions
 	    scope.globals[wgslf] = makeVarPair(wgslf=>Function)
     end
+
+    scope.globals[:atomicAdd] = makeVarPair(:atomicAdd=>Function)
     
 	builtinArgs = [
 		:(@builtin(global_invocation_id, globalId::Vec3{UInt32})),
@@ -64,8 +66,6 @@ function computeBlock(scope, islaunch, wgSize, wgCount, shmem, funcName, funcArg
 		:(@builtin(workgroup_id, workgroupId::Vec3{UInt32})),
 	]
 
-	
-	
 	# First consider only typeVars
 	for (inArg, symbolArg) in zip(funcArgs, fargs)
 		if @capture(symbolArg, iovar_::ioType_{T_, N_})
@@ -149,6 +149,8 @@ function computeBlock(scope, islaunch, wgSize, wgCount, shmem, funcName, funcArg
 		end
 	end
 
+	shmem = Base.eval(shmem)
+	
 	for (idx, (symbolarg, (inType, inSize))) in enumerate(shmem)
 		arrayLen = reduce(*, inSize)
 		push!(
